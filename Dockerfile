@@ -29,3 +29,4 @@ RUN pip3 --default-timeout=1000 install torchvision tensorboardx
 
 ENV PYTHONPATH="/workspace"
 ENV PYTHONIOENCODING=UTF-8
+
