@@ -7,26 +7,25 @@
 FROM nvcr.io/nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04 AS x86_64_build
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV BASE_DIR /workspace
+ENV BASE_DIR=/workspace
 WORKDIR ${BASE_DIR}
 
 
-RUN apt update &&\
-    apt install -y \
+RUN apt-get update --fix-missing && apt-get install -y \
     software-properties-common \
     build-essential \
     gnupg2 \
     wget \
-    unzip
-
-# DOWNLOAD AND INSTALL PYTHON AND PIP
-RUN apt update &&\
-    apt install -y \
+    unzip \
     curl \
-    python3-pip
+    python3-pip \
+    git
 
-RUN pip3 --default-timeout=1000 install torchvision tensorboardx
+COPY requirements.txt .
+RUN pip3 --default-timeout=1000 install -r requirements.txt
 
-ENV PYTHONPATH="/workspace"
+RUN git clone https://github.com/gurkirt/3D-RetinaNet.git ${BASE_DIR}/3D-RetinaNet
+
+
+ENV PYTHONPATH=/workspace
 ENV PYTHONIOENCODING=UTF-8
-
