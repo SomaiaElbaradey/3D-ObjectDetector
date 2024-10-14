@@ -1,0 +1,6 @@
+torch==1.12.1
+torchvision==0.13.1
+tensorboardx==2.5.1
+scipy==1.9.3
+pyyaml==5.4.1
+easydict==1.9
