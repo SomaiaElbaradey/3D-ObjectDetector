@@ -1,5 +1,0 @@
-torchvision
-tensorboardx
-scipy
-pyyaml
-easydict
