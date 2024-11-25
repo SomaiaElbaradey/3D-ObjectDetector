@@ -1,0 +1,91 @@
+{
+    "general": {
+      "description": "Training single stage FPN with OHEM, resnet as backbone",
+      "mode": "train",
+      "dataset": "road",
+      "multi_gpus": true,
+      "manual_seed": 123
+    },
+    "paths": {
+      "data_root": "/mnt/mars-fast/datasets/",
+      "save_root": "/mnt/mars-alpha/",
+      "model_path": "/mnt/mars-fast/datasets/",
+      "anno_root": "",
+      "compute_paths": false,
+      "compute_tubes": false
+    },
+    "backbone": {
+      "arch": "resnet50",
+      "model_type": "I3D",
+      "anchor_type": "RETINA"
+    },
+    "sequence": {
+      "seq_len": 8,
+      "test_seq_len": 8,
+      "min_seq_step": 1,
+      "max_seq_step": 1
+    },
+   "model_parameters": {
+      "head_layers": 3,
+      "num_feature_maps": 5,
+      "cls_head_time_size": 3,
+      "reg_head_time_size": 3,
+      "freeze_bn": true,
+      "freeze_upto": 1
+    },
+    "data_loading": {
+      "batch_size": 4,
+      "test_batch_size": 1,
+      "num_workers": 8,
+      "train_subsets": "train_3",
+      "val_subsets": "",
+      "test_subsets": "",
+      "min_size": 512
+    },
+    "optimizer": {
+      "optim": "SGD",
+      "resume": 0,
+      "max_epochs": 30,
+      "learning_rate": 0.004225,
+      "momentum": 0.9,
+      "milestones": "20,25",
+      "gamma": 0.1,
+      "weight_decay": 0.0001
+    },
+    "loss_thresholds": {
+      "positive_threshold": 0.5,
+      "negative_threshold": 0.4
+    },
+    "evaluation": {
+      "eval_epochs": "30",
+      "val_step": 1,
+      "iou_thresh": 0.5,
+      "conf_thresh": 0.025,
+      "nms_thresh": 0.5,
+      "topk": 10,
+      "gen_conf_thresh": 0.025,
+      "gen_topk": 100,
+      "gen_nms": 0.5,
+      "classwise_nms": false,
+      "joint_4m_marginals": false
+    },
+    "path_parameters": {
+      "paths_iouth": 0.5,
+      "paths_cost_type": "score",
+      "paths_jump_gap": 4,
+      "paths_min_len": 6,
+      "paths_minscore": 0.1
+    },
+    "tube_parameters": {
+      "tubes_alpha": 0,
+      "trim_method": "none",
+      "tubes_topk": 10,
+      "tubes_minlen": 5,
+      "tubes_eval_threshs": "0.2,0.5"
+    },
+    "logging": {
+      "log_start": 10,
+      "log_step": 10,
+      "tensorboard":true
+  }
+}
