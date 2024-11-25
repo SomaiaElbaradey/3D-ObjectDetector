@@ -1,0 +1,41 @@
+{
+	"name": "3D_Object_Detection",
+	// Sets the run context to one level up instead of the .devcontainer folder.
+	"context": "..",
+	// Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
+	"dockerFile": "../Dockerfile",
+	"mounts": [
+		"source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+	],
+	"settings": {
+		"terminal.integrated.shell.linux": "/bin/bash",
+		"[python]": {
+			"editor.defaultFormatter": "ms-python.black-formatter",
+			"editor.formatOnSave": true,
+		}
+	},
+	"workspaceFolder": "/workspace",
+	"extensions": [
+		"DavidAnson.vscode-markdownlint",
+		"eamodio.gitlens",
+		"msfukui.eof-mark",
+		"tabnine.tabnine-vscode",
+		"ms-azuretools.vscode-docker",
+		"ms-vscode-remote.remote-containers",
+		"ms-vscode-remote.remote-wsl",
+		"ms-python.black-formatter",
+		"njpwerner.autodocstring"
+	],
+	"runArgs": [
+		"--net=host",
+		"--gpus",
+		"all",
+		"-e",
+		"DISPLAY=${env:DISPLAY}",
+		"-v",
+		"/tmp/.X11-unix:/tmp/.X11-unix",
+		"--privileged",
+		"-v",
+		"/media/rafay/Windows-SSD/other/data/open_source/3D_retinaNet/:/workspace/dataset"
+	]
+}
