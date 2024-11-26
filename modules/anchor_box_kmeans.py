@@ -38,12 +38,13 @@ class anchorBox(torch.nn.Module):
                                     [0.0000, 0.0000, 0.3307, 0.6395],
                                     [0.0000, 0.0000, 0.7772, 0.6261],
                                     [0.0000, 0.0000, 0.4732, 0.3153]])
-        
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
         for s1 in range(len(self.default_sizes)):
             p_anchors = base_anchors[s1*3:(s1+1)*3,:]
             p_anchors[:,:2] = p_anchors[:,:2]-p_anchors[:,2:]/2.0
             p_anchors[:,2:] = p_anchors[:,2:]/2.0
-            p_anchors = torch.FloatTensor(p_anchors).cuda()
+            p_anchors = torch.FloatTensor(p_anchors).to(device)
             # print(p_anchors)
             anchors.append(p_anchors)
 
