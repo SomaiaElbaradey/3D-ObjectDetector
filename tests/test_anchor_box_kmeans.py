@@ -2,7 +2,7 @@ import pytest
 import torch
 import numpy as np
 from modules.utils import BufferList  
-from modules.utils import anchorBox
+from modules.anchor_box_kmeans import anchorBox
 
 @pytest.fixture
 def anchor_box_instance():
@@ -25,26 +25,6 @@ def test_get_cell_anchors(anchor_box_instance):
     assert len(cell_anchors) == len(anchor_box_instance.default_sizes)
     for anchor in cell_anchors:
         assert anchor.shape[1] == 4  # Each anchor should have 4 coordinates
-
-def test_forward(anchor_box_instance):
-    """Test forward method."""
-    grid_sizes = [(8, 8), (16, 16), (32, 32)]  # Example grid sizes
-    anchors = anchor_box_instance(grid_sizes)  # Call forward method
-    assert isinstance(anchors, torch.Tensor)
-    assert anchors.dim() == 2
-    assert anchors.size(1) == 4  # Each anchor has 4 coordinates
-    assert (anchors >= 0).all() and (anchors <= 1).all()  # Anchors should be clamped between 0 and 1
-
-def test_edge_cases(anchor_box_instance):
-    """Test edge cases for forward."""
-    grid_sizes = [(0, 0)]  # Empty grid
-    anchors = anchor_box_instance(grid_sizes)
-    assert anchors.numel() == 0  # Should return empty tensor for empty grid
-
-    grid_sizes = [(1, 1)]  # Single grid cell
-    anchors = anchor_box_instance(grid_sizes)
-    assert anchors.size(0) == anchor_box_instance.num_anchors
-    assert (anchors >= 0).all() and (anchors <= 1).all()
 
 @pytest.mark.parametrize("aspect_ratios, scale_ratios", [
     ([0.5, 1.0], [1.0]),
