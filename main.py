@@ -246,13 +246,14 @@ def main():
             # Add evaluation logic...
         elif args.MODE == 'eval_tubes':
             logger.info("Setting up for evaluating tubes.")
+        else:
+            logger.error(f"Unknown mode: {args.MODE}")
             # Add tube evaluation logic...
         ## For validation set
         full_test = False
         args.SUBSETS = args.VAL_SUBSETS
         skip_step = args.SEQ_LEN*8
     else:
-        logger.error(f"Unknown mode: {args.MODE}")
         args.SEQ_LEN = args.TEST_SEQ_LEN
         args.MAX_SEQ_STEP = 1
         args.SUBSETS = args.TEST_SUBSETS
