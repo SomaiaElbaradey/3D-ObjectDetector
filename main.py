@@ -1,4 +1,4 @@
-
+import logging
 import os
 import sys
 import torch
@@ -14,11 +14,23 @@ from gen_dets import gen_dets, eval_framewise_dets
 from tubes import build_eval_tubes
 from val import val
 
+# Configure the logger
+logging.basicConfig(
+    level=logging.INFO,  # Change to DEBUG for more verbose logging
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),  # Log to console
+    ]
+)
+logger = logging.getLogger(__name__)
+
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
 
 
 def main():
+    logger.info("Starting the script...")
+
     parser = argparse.ArgumentParser(description='Training single stage FPN with OHEM, resnet as backbone')
     parser.add_argument('DATA_ROOT', help='Location to root directory for dataset reading') # /mnt/mars-fast/datasets/
     parser.add_argument('SAVE_ROOT', help='Location to root directory for saving checkpoint models') # /mnt/mars-alpha/
@@ -172,14 +184,18 @@ def main():
     # Use CUDA_VISIBLE_DEVICES=0,1,4,6 to select GPUs to use
 
 
-    ## Parse arguments
+    # Parse arguments
     args = parser.parse_args()
-
+    logger.debug(f"Parsed arguments: {args}")
     args = utils.set_args(args) # set directories and SUBSETS fo datasets
+    logger.info(f"Experiment name set up as: {args.EXP_NAME}")
+
     args.MULTI_GPUS = False if args.BATCH_SIZE == 1 else args.MULTI_GPUS
     ## set random seeds and global settings
     np.random.seed(args.MAN_SEED)
     torch.manual_seed(args.MAN_SEED)
+    logger.debug("Random seeds set for reproducibility.")
+
     # torch.cuda.manual_seed_all(args.MAN_SEED)
     torch.set_default_tensor_type('torch.FloatTensor')
 
@@ -190,6 +206,7 @@ def main():
     logger.info(sys.version)
 
     assert args.MODE in ['train','val','gen_dets','eval_frames', 'eval_tubes'], 'MODE must be from ' + ','.join(['train','test','tubes'])
+    logger.info(f"Running in MODE: {args.MODE}")
 
     if args.MODE == 'train':
         args.TEST_SEQ_LEN = args.SEQ_LEN
@@ -197,6 +214,8 @@ def main():
         args.SEQ_LEN = args.TEST_SEQ_LEN
 
     if args.MODE in ['train','val']:
+        logger.info("Setting up for training/validation.")
+
         # args.CONF_THRESH = 0.05
         args.SUBSETS = args.TRAIN_SUBSETS
         train_transform = transforms.Compose([
@@ -215,11 +234,25 @@ def main():
 
         train_dataset = VideoDataset(args, train=True, skip_step=train_skip_step, transform=train_transform)
         logger.info('Done Loading Dataset Train Dataset')
+                # If validation dataset is set
+        if args.VAL_SUBSETS:
+            logger.info("Validation subsets provided. Setting up validation dataset.")
+            # Add validation dataset logic here...
+        elif args.MODE == 'gen_dets':
+            logger.info("Setting up for generating detections.")
+            # Add generation logic...
+        elif args.MODE == 'eval_frames':
+            logger.info("Setting up for evaluating frame-wise detections.")
+            # Add evaluation logic...
+        elif args.MODE == 'eval_tubes':
+            logger.info("Setting up for evaluating tubes.")
+            # Add tube evaluation logic...
         ## For validation set
         full_test = False
         args.SUBSETS = args.VAL_SUBSETS
         skip_step = args.SEQ_LEN*8
     else:
+        logger.error(f"Unknown mode: {args.MODE}")
         args.SEQ_LEN = args.TEST_SEQ_LEN
         args.MAX_SEQ_STEP = 1
         args.SUBSETS = args.TEST_SUBSETS
@@ -280,7 +313,8 @@ def main():
         eval_framewise_dets(args, val_dataset)
     elif args.MODE == 'eval_tubes':
         build_eval_tubes(args, val_dataset)
-    
+
+    logger.info("Execution complete. Exiting program.")
 
 if __name__ == "__main__":
     main()
