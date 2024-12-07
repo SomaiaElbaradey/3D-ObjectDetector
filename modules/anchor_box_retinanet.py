@@ -18,14 +18,15 @@ class anchorBox(torch.nn.Module):
         self.ratios = ratios
         self.scales = scales
         self.strides = strides
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.ar = len(self.ratios)*len(self.ratios)
         self.cell_anchors = BufferList(self._get_cell_anchors())
-        
+
     def _get_cell_anchors(self):
         anchors = []
         for s1 in self.sizes:
             p_anchors = np.asarray(self._gen_generate_anchors_on_one_level(s1))
-            p_anchors = torch.FloatTensor(p_anchors).cuda()
+            p_anchors = torch.FloatTensor(p_anchors).to(self.device)
             anchors.append(p_anchors)
 
         return anchors
@@ -68,8 +69,8 @@ class anchorBox(torch.nn.Module):
         for size, stride, base_anchors in zip(grid_sizes, self.strides, self.cell_anchors):
             grid_height, grid_width = size
             device = base_anchors.device
-            shifts_x = torch.arange(0, grid_width, dtype=torch.float32, device=device)
-            shifts_y = torch.arange(0, grid_height, dtype=torch.float32, device=device)
+            shifts_x = torch.arange(0, grid_width, dtype=torch.float32, device=self.device)
+            shifts_y = torch.arange(0, grid_height, dtype=torch.float32, device=self.device)
             shift_y, shift_x = torch.meshgrid(shifts_y, shifts_x) 
             shift_x = (shift_x.reshape(-1) + 0.5) * stride
             shift_y = (shift_y.reshape(-1) + 0.5) * stride
