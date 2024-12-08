@@ -101,6 +101,8 @@ For annotating frame-wise detections, use the following jupyter notebook
 path-to-repository/3D-ObjectDetector/testing_annotation_script.ipynb
 ```
 
+Want to make video from images/frames? 
+Install ffmeg in linux/ubuntu by running th following command in terminal
 ```
 sudo apt-get install ffmpeg
 ```
