@@ -101,6 +101,20 @@ For annotating frame-wise detections, use the following jupyter notebook
 path-to-repository/3D-ObjectDetector/testing_annotation_script.ipynb
 ```
 
+```
+sudo apt-get install ffmpeg
+```
+Run the following command for making video from annotated images/frames
+```
+ffmpeg -framerate 25 -i %05d.jpg -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p output.mp4
+```
+
+Run the following command for reducing size of the video (I figured it out. The "-b" flag in ffmpeg sets the bit rate. I also found out that 1,000,000 is a good general use value that provides a decent tradeoff between file size and quality)
+```
+ffmpeg -i output.mp4 -b 1000000 output_compress.mp4
+```
+
+
 ## Performance
 
 Here, you find the reproduced  results from our [paper](https://arxiv.org/pdf/2102.11585.pdf). We use training split #3 for reproduction on a different machines compared to where results were generated for the paper. Below you will find the test results on validation split #3, which closer to test set compared to other split in terms of environmental conditions.
