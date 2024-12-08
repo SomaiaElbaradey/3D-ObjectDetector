@@ -95,6 +95,11 @@ python3 main.py /workspace/ /workspace/ /workspace/kinetics-pt/ --MODE=gen_dets 
   * After performing tubes a detection `.json` file is dumped, which is used for evaluation, see `tubes.py` for more detatils.
   * See `modules\evaluation.py` and `data\dataset.py` for frame-level and video-level evaluation code to compute `frame-mAP` and `video-mAP`.
 
+For annotating frame-wise detections, use the following jupyter notebook
+
+```
+path-to-repository/3D-ObjectDetector/testing_annotation_script.ipynb
+```
 
 ## Performance
 
