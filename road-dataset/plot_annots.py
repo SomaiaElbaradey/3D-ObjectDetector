@@ -1,11 +1,3 @@
-"""
-Author: Gurkirt Singh
-Date: 12-05-2021
-
-The purpose of this script is to plot annotation or ROAD dataset.
-
-"""
-
 import json, pdb, argparse
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
