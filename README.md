@@ -95,6 +95,33 @@ python3 main.py /workspace/ /workspace/ /workspace/kinetics-pt/ --MODE=gen_dets 
   * After performing tubes a detection `.json` file is dumped, which is used for evaluation, see `tubes.py` for more detatils.
   * See `modules\evaluation.py` and `data\dataset.py` for frame-level and video-level evaluation code to compute `frame-mAP` and `video-mAP`.
 
+For annotating frame-wise detections, use the following jupyter notebook
+
+```
+path-to-repository/3D-ObjectDetector/testing_annotation_script.ipynb
+```
+
+Want to make video from images/frames? 
+Install ffmeg in linux/ubuntu by running th following command in terminal
+```
+sudo apt-get install ffmpeg
+```
+Run the following command for making video from annotated images/frames
+```
+ffmpeg -framerate 25 -i %05d.jpg -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p output.mp4
+```
+
+Run the following command for reducing size of the video (I figured it out. The "-b" flag in ffmpeg sets the bit rate. I also found out that 1,000,000 is a good general use value that provides a decent tradeoff between file size and quality)
+```
+ffmpeg -i output.mp4 -b 1000000 output_compress.mp4
+```
+
+To generate the code flow diagram, use pyflowchart
+```
+pip3 install pyflowchart
+python3 -m pyflowchart main.py -o main.html -f main
+```
+
 
 ## Performance
 
