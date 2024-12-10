@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>main</title>
+        <style type="text/css">
+          .end-element { fill : #FFCCFF; }
+        </style>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.17.1/flowchart.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.1/js/bootstrap.bundle.min.js"></script>
+        <!-- <script src="../release/flowchart.min.js"></script> -->
+        <script>
+
+            window.onload = function () {
+                var btn = document.getElementById("run"),
+                    cd = document.getElementById("code"),
+                    chart;
+                    
+                (btn.onclick = function () {
+                    var code = cd.value;
+
+                    if (chart) {
+                      chart.clean();
+                    }
+
+                    chart = flowchart.parse(code);
+                    chart.drawSVG('canvas', {
+                      'x': 0,
+                      'y': 0,
+                      'line-width': 3,
+                      //'maxWidth': 15,//ensures the flowcharts fits within a certain width
+                      'line-length': 50,
+                      'text-margin': 10,
+                      'font-size': 14,
+                      'font': 'normal',
+                      'font-family': 'Helvetica',
+                      'font-weight': 'normal',
+                      'font-color': 'black',
+                      'line-color': 'black',
+                      'element-color': 'black',
+                      'fill': 'white',
+                      'yes-text': 'yes',
+                      'no-text': 'no',
+                      'arrow-end': 'block',
+                      'scale': 1,
+                      'symbols': {
+                        'start': {
+                          'font-size': 14,
+                          'font-color': 'yellow',
+                          'element-color': 'blue',
+                          'fill': 'green',
+                          'class': 'start-element'
+                        },
+                        'inputoutput': {
+                          'font-color': 'black',
+                          'element-color': 'black',
+                          'fill': 'bisque'
+                        },
+                        'operation': {
+                          'font-color': 'black',
+                          'element-color': 'black',
+                          'fill': 'linen'
+                        },
+                        'subroutine': {
+                          'font-color': 'black',
+                          'element-color': 'blue',
+                          'fill': 'lightgreen'
+                        },
+                        'condition': {
+                          'font-color': 'red',
+                          'element-color': 'black',
+                          'fill': 'yellow'
+                        },
+                        'end':{
+                          'font-size': 20,
+                          'class': 'end-element'
+                        }
+                      },
+                      'flowstate' : {
+                        //'past' : { 'fill' : '#CCCCCC', 'font-size' : 12},
+                        //'current' : {'fill' : 'yellow', 'font-color' : 'red', 'font-weight' : 'bold'},
+                        //'future' : { 'fill' : '#FFFF99'},
+                        'request' : { 'fill' : 'blue'},
+                        'invalid': {'fill' : '#444444'},
+                        'approved' : { 'fill' : '#58C4A3', 'font-size' : 12, 'yes-text' : 'APPROVED', 'no-text' : 'n/a' },
+                        'rejected' : { 'fill' : '#C45879', 'font-size' : 12, 'yes-text' : 'n/a', 'no-text' : 'REJECTED' }
+                      }
+                    });
+                    //create base64 encoding of SVG to generate download link for title(without html or htm).SVG
+                    var currentCanvasDIV = document.getElementById('canvas')
+                    var currentDrawSVG = currentCanvasDIV.innerHTML.replaceAll('ë','e');
+
+                    const OUTsvgBASE64 = btoa(currentDrawSVG)
+                    doctitle = document.title.replace('.html','');
+                    doctitle = doctitle.replace('.htm','');
+
+
+                    var currentCanvasDIV = document.getElementById('canvas')
+                    var currentDrawSVG = currentCanvasDIV.innerHTML.replaceAll('ë','e');
+                    svgSource = currentDrawSVG
+                    svgXML = currentDrawSVG;
+                    // Use SVG Height and Width from the SVG XML to set canvas size
+                    svgXMLsubstringHeight = svgXML.substring(svgXML.indexOf('height='), svgXML.indexOf('version='));
+                    svgXMLsubstringWidth = svgXML.substring(svgXML.indexOf('width='), svgXML.indexOf('xmlns='));
+                    HeightValue = svgXMLsubstringHeight.substring(svgXMLsubstringHeight.indexOf('"')+1,svgXMLsubstringHeight.lastIndexOf('"'));
+                    WidthValue = svgXMLsubstringWidth.substring(svgXMLsubstringWidth.indexOf('"')+1,svgXMLsubstringWidth.lastIndexOf('"'));
+                    HeightValueInt = Math.round(HeightValue)
+                    WidthValueInt = Math.round(WidthValue)
+                    // setup input for base64SvgToBase64Png
+                    let svgSrc = "data:image/svg+xml;base64,"+OUTsvgBASE64;
+                    var pngBase
+                    imageUtil.base64SvgToBase64Png(svgSrc, WidthValueInt, HeightValueInt).then(pngSrc => {
+                    pngBase = pngSrc
+                    // output download link for base64 PNG converted on download from base64
+                    var pngOutHtml = `<a href="${pngBase}" download="${doctitle}.png">PNG - Click here to download current rendered flowchart as ${doctitle}.png</a>`
+                    document.getElementById("pngbase64").innerHTML=pngOutHtml;
+                    });    
+                    // output download link for base64 SVG converted on download from base64
+                    var svgOutHtml = `<a href="data:image/svg+xml;base64,${OUTsvgBASE64}" download=${doctitle}.svg>SVG - Click here to download current rendered flowchart as ${doctitle}.svg</a> `
+                        document.getElementById("svgbase64").innerHTML=svgOutHtml;
+                    })();
+
+                            };
+                 
+
+// derived from https://stackoverflow.com/a/64800570
+// we need to use web browser canvas to generate a image. In this case png
+let imageUtil = {};
+/**
+ * converts a base64 encoded data url SVG image to a PNG image
+ * @param originalBase64 data url of svg image
+ * @param width target width in pixel of PNG image
+ * @param secondTry used internally to prevent endless recursion
+ * @return {Promise<unknown>} resolves to png data url of the image
+ */
+imageUtil.base64SvgToBase64Png = function (originalBase64, width, height, secondTry) {
+    return new Promise(resolve => {
+        let img = document.createElement('img');
+        img.onload = function () {
+            if (!secondTry && (img.naturalWidth === 0 || img.naturalHeight === 0)) {
+                let svgDoc = base64ToSvgDocument(originalBase64);
+                let fixedDoc = fixSvgDocumentFF(svgDoc);
+                return imageUtil.base64SvgToBase64Png(svgDocumentToBase64(fixedDoc), width, height, true).then(result => {
+                    resolve(result);
+                });
+            }
+            //document.body.appendChild(img);
+            let canvas2 = document.createElement("canvas");
+            //document.body.removeChild(img);
+            canvas2.width = width;
+            canvas2.height = height;
+            let ctx = canvas2.getContext("2d");
+            ctx.drawImage(img, 0, 0, canvas2.width, canvas2.height);
+            try {
+                let data = canvas2.toDataURL('image/png');
+                resolve(data);
+            } catch (e) {
+                resolve(null);
+            }
+        };
+        img.src = originalBase64;
+    });
+}
+
+//needed because Firefox doesn't correctly handle SVG with size = 0, see https://bugzilla.mozilla.org/show_bug.cgi?id=700533
+function fixSvgDocumentFF(svgDocument) {
+    try {
+        let widthInt = parseInt(svgDocument.documentElement.width.baseVal.value) || 500;
+        let heightInt = parseInt(svgDocument.documentElement.height.baseVal.value) || 500;
+        svgDocument.documentElement.width.baseVal.newValueSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PX, widthInt);
+        svgDocument.documentElement.height.baseVal.newValueSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PX, heightInt);
+        return svgDocument;
+    } catch (e) {
+        return svgDocument;
+    }
+}
+
+function svgDocumentToBase64(svgDocument) {
+    try {
+        let base64EncodedSVG = btoa(new XMLSerializer().serializeToString(svgDocument));
+        return 'data:image/svg+xml;base64,' + base64EncodedSVG;
+    } catch (e) {
+        return null;
+    }
+}
+
+function base64ToSvgDocument(base64) {
+    let svg = atob(base64.substring(base64.indexOf('base64,') + 7));
+    svg = svg.substring(svg.indexOf('<svg'));
+    let parser = new DOMParser();
+    return parser.parseFromString(svg, "image/svg+xml");
+} 
+        </script>
+
+        <script>
+            function HelpText() {
+              var x = document.getElementById("HelpTextBlock");
+              if (x.style.display === "none") {
+                x.style.display = "block";
+              } else {
+                x.style.display = "none";
+              }
+            }
+        </script>
+    </head>
+    <body>
+        <div><textarea id="code" style="width: 100%;" rows="11">st3=>start: start main
+io5=>inputoutput: input: 
+op8=>operation: parser = argparse.ArgumentParser(description='Training single stage FPN with OHEM, resnet as backbone')
+sub10=>subroutine: parser.add_argument('DATA_ROOT', help='Location to root directory for dataset reading')
+sub12=>subroutine: parser.add_argument('SAVE_ROOT', help='Location to root directory for saving checkpoint models')
+sub14=>subroutine: parser.add_argument('MODEL_PATH', help='Location to root directory where kinetics pretrained models are stored')
+sub16=>subroutine: parser.add_argument('--ANNO_ROOT', default='', help='Location to directory where annotations are stored')
+sub18=>subroutine: parser.add_argument('--MODE', default='train', help='MODE can be train, gen_dets, eval_frames, eval_tubes define SUBSETS accordingly, build tubes')
+sub20=>subroutine: parser.add_argument('--ARCH', default='resnet50', type=str, help=' base arch')
+sub22=>subroutine: parser.add_argument('--MODEL_TYPE', default='I3D', type=str, help=' base model')
+sub24=>subroutine: parser.add_argument('--ANCHOR_TYPE', default='RETINA', type=str, help='type of anchors to be used in model')
+sub26=>subroutine: parser.add_argument('--SEQ_LEN', default=8, type=int, help='NUmber of input frames')
+sub28=>subroutine: parser.add_argument('--TEST_SEQ_LEN', default=8, type=int, help='NUmber of input frames')
+sub30=>subroutine: parser.add_argument('--MIN_SEQ_STEP', default=1, type=int, help='DIFFERENCE of gap between the frames of sequence')
+sub32=>subroutine: parser.add_argument('--MAX_SEQ_STEP', default=1, type=int, help='DIFFERENCE of gap between the frames of sequence')
+sub34=>subroutine: parser.add_argument('--HEAD_LAYERS', default=3, type=int, help='0 mean no shareding more than 0 means shareing')
+sub36=>subroutine: parser.add_argument('--NUM_FEATURE_MAPS', default=5, type=int, help='0 mean no shareding more than 0 means shareing')
+sub38=>subroutine: parser.add_argument('--CLS_HEAD_TIME_SIZE', default=3, type=int, help='Temporal kernel size of classification head')
+sub40=>subroutine: parser.add_argument('--REG_HEAD_TIME_SIZE', default=3, type=int, help='Temporal kernel size of regression head')
+sub42=>subroutine: parser.add_argument('--DATASET', default='road', type=str, help='dataset being used')
+sub44=>subroutine: parser.add_argument('--TRAIN_SUBSETS', default='train_3,', type=str, help='Training SUBSETS seprated by ,')
+sub46=>subroutine: parser.add_argument('--VAL_SUBSETS', default='', type=str, help='Validation SUBSETS seprated by ,')
+sub48=>subroutine: parser.add_argument('--TEST_SUBSETS', default='', type=str, help='Testing SUBSETS seprated by ,')
+sub50=>subroutine: parser.add_argument('--MIN_SIZE', default=512, type=int, help='Input Size for FPN')
+sub52=>subroutine: parser.add_argument('-b', '--BATCH_SIZE', default=4, type=int, help='Batch size for training')
+sub54=>subroutine: parser.add_argument('--TEST_BATCH_SIZE', default=1, type=int, help='Batch size for testing')
+sub56=>subroutine: parser.add_argument('--NUM_WORKERS', '-j', default=8, type=int, help='Number of workers used in dataloading')
+sub58=>subroutine: parser.add_argument('--OPTIM', default='SGD', type=str, help='Optimiser type')
+sub60=>subroutine: parser.add_argument('--RESUME', default=0, type=int, help='Resume from given epoch')
+sub62=>subroutine: parser.add_argument('--MAX_EPOCHS', default=30, type=int, help='Number of training epoc')
+sub64=>subroutine: parser.add_argument('-l', '--LR', '--learning-rate', default=0.004225, type=float, help='initial learning rate')
+sub66=>subroutine: parser.add_argument('--MOMENTUM', default=0.9, type=float, help='momentum')
+sub68=>subroutine: parser.add_argument('--MILESTONES', default='20,25', type=str, help='Chnage the lr @')
+sub70=>subroutine: parser.add_argument('--GAMMA', default=0.1, type=float, help='Gamma update for SGD')
+sub72=>subroutine: parser.add_argument('--WEIGHT_DECAY', default=0.0001, type=float, help='Weight decay for SGD')
+sub74=>subroutine: parser.add_argument('--FBN', '--FREEZE_BN', default=True, type=str2bool, help='freeze bn layers if true or else keep updating bn layers')
+sub76=>subroutine: parser.add_argument('--FREEZE_UPTO', default=1, type=int, help='layer group number in ResNet up to which needs to be frozen')
+sub78=>subroutine: parser.add_argument('--POSTIVE_THRESHOLD', default=0.5, type=float, help='Min threshold for Jaccard index for matching')
+sub80=>subroutine: parser.add_argument('--NEGTIVE_THRESHOLD', default=0.4, type=float, help='Max threshold Jaccard index for matching')
+sub82=>subroutine: parser.add_argument('--EVAL_EPOCHS', default='30', type=str, help='eval epochs to test network on these epoch checkpoints usually the last epoch is used')
+sub84=>subroutine: parser.add_argument('--VAL_STEP', default=1, type=int, help='Number of training epoch before evaluation')
+sub86=>subroutine: parser.add_argument('--IOU_THRESH', default=0.5, type=float, help='Evaluation threshold for validation and for frame-wise mAP')
+sub88=>subroutine: parser.add_argument('--CONF_THRESH', default=0.025, type=float, help='Confidence threshold for to remove detection below given number')
+sub90=>subroutine: parser.add_argument('--NMS_THRESH', default=0.5, type=float, help='NMS threshold to apply nms at the time of validation')
+sub92=>subroutine: parser.add_argument('--TOPK', default=10, type=int, help='topk detection to keep for evaluation')
+sub94=>subroutine: parser.add_argument('--GEN_CONF_THRESH', default=0.05, type=float, help='Confidence threshold at the time of generation and dumping')
+sub96=>subroutine: parser.add_argument('--GEN_TOPK', default=100, type=int, help='topk at the time of generation')
+sub98=>subroutine: parser.add_argument('--GEN_NMS', default=0.5, type=float, help='NMS at the time of generation')
+sub100=>subroutine: parser.add_argument('--CLASSWISE_NMS', default=False, type=str2bool, help='apply classwise NMS/no tested properly')
+sub102=>subroutine: parser.add_argument('--JOINT_4M_MARGINALS', default=False, type=str2bool, help='generate score of joints i.e. duplexes or triplet by marginals like agents and actions scores')
+sub104=>subroutine: parser.add_argument('--COMPUTE_PATHS', default=False, type=str2bool, help=' COMPUTE_PATHS if set true then it overwrite existing ones')
+sub106=>subroutine: parser.add_argument('--PATHS_IOUTH', default=0.5, type=float, help='Iou threshold for building paths to limit neighborhood search')
+sub108=>subroutine: parser.add_argument('--PATHS_COST_TYPE', default='score', type=str, help='cost function type to use for matching, other options are scoreiou, iou')
+sub110=>subroutine: parser.add_argument('--PATHS_JUMP_GAP', default=4, type=int, help='GAP allowed for a tube to be kept alive after no matching detection found')
+sub112=>subroutine: parser.add_argument('--PATHS_MIN_LEN', default=6, type=int, help='minimum length of generated path')
+sub114=>subroutine: parser.add_argument('--PATHS_MINSCORE', default=0.1, type=float, help='minimum score a path should have over its length')
+sub116=>subroutine: parser.add_argument('--COMPUTE_TUBES', default=False, type=str2bool, help='if set true then it overwrite existing tubes')
+sub118=>subroutine: parser.add_argument('--TUBES_ALPHA', default=0, type=float, help='alpha cost for changeing the label')
+sub120=>subroutine: parser.add_argument('--TRIM_METHOD', default='none', type=str, help='other one is indiv which works for UCF24')
+sub122=>subroutine: parser.add_argument('--TUBES_TOPK', default=10, type=int, help='Number of labels to assign for a tube')
+sub124=>subroutine: parser.add_argument('--TUBES_MINLEN', default=5, type=int, help='minimum length of a tube')
+sub126=>subroutine: parser.add_argument('--TUBES_EVAL_THRESHS', default='0.2,0.5', type=str, help='evaluation threshold for checking tube overlap at evaluation time, one can provide as many as one wants')
+sub128=>subroutine: parser.add_argument('--LOG_START', default=10, type=int, help='start loging after k steps for text/tensorboard')
+sub130=>subroutine: parser.add_argument('--LOG_STEP', default=10, type=int, help='Log every k steps for text/tensorboard')
+sub132=>subroutine: parser.add_argument('--TENSORBOARD', default=1, type=str2bool, help='Use tensorboard for loss/evalaution visualization')
+sub134=>subroutine: parser.add_argument('--MAN_SEED', default=123, type=int, help='manualseed for reproduction')
+sub136=>subroutine: parser.add_argument('--MULTI_GPUS', default=True, type=str2bool, help='If  more than 0 then use all visible GPUs by default only one GPU used ')
+op138=>operation: args = parser.parse_args()
+op140=>operation: args = utils.set_args(args)
+op142=>operation: args.MULTI_GPUS = (False if (args.BATCH_SIZE == 1) else args.MULTI_GPUS)
+sub144=>subroutine: np.random.seed(args.MAN_SEED)
+sub146=>subroutine: torch.manual_seed(args.MAN_SEED)
+sub148=>subroutine: torch.set_default_tensor_type('torch.FloatTensor')
+op150=>operation: args = utils.create_exp_name(args)
+sub152=>subroutine: utils.setup_logger(args)
+op154=>operation: logger = utils.get_logger(__name__)
+sub156=>subroutine: logger.info(sys.version)
+op158=>operation: assert (args.MODE in ['train', 'val', 'gen_dets', 'eval_frames', 'eval_tubes']), ('MODE must be from ' + ','.join(['train', 'test', 'tubes']))
+cond161=>condition: if (args.MODE == 'train')
+op165=>operation: args.TEST_SEQ_LEN = args.SEQ_LEN
+cond173=>condition: if (args.MODE in ['train', 'val'])
+op177=>operation: args.SUBSETS = args.TRAIN_SUBSETS
+op179=>operation: train_transform = transforms.Compose([vtf.ResizeClip(args.MIN_SIZE, args.MAX_SIZE), vtf.ToTensorStack(), vtf.Normalize(mean=args.MEANS, std=args.STDS)])
+cond182=>condition: if (args.SEQ_LEN > 10)
+op186=>operation: train_skip_step = ((args.SEQ_LEN + ((args.MAX_SEQ_STEP - 1) * 2)) - 2)
+op193=>operation: train_dataset = VideoDataset(args, train=True, skip_step=train_skip_step, transform=train_transform)
+sub195=>subroutine: logger.info('Done Loading Dataset Train Dataset')
+op197=>operation: full_test = False
+op199=>operation: args.SUBSETS = args.VAL_SUBSETS
+op201=>operation: skip_step = (args.SEQ_LEN * 8)
+op243=>operation: val_transform = transforms.Compose([vtf.ResizeClip(args.MIN_SIZE, args.MAX_SIZE), vtf.ToTensorStack(), vtf.Normalize(mean=args.MEANS, std=args.STDS)])
+op245=>operation: val_dataset = VideoDataset(args, train=False, transform=val_transform, skip_step=skip_step, full_test=full_test)
+sub247=>subroutine: logger.info('Done Loading Dataset Validation Dataset')
+op249=>operation: args.num_classes = val_dataset.num_classes
+op251=>operation: args.label_types = val_dataset.label_types
+op253=>operation: args.num_label_types = val_dataset.num_label_types
+op255=>operation: args.all_classes = val_dataset.all_classes
+op257=>operation: args.num_classes_list = val_dataset.num_classes_list
+op259=>operation: args.num_ego_classes = val_dataset.num_ego_classes
+op261=>operation: args.ego_classes = val_dataset.ego_classes
+op263=>operation: args.head_size = 256
+cond266=>condition: if (args.MODE in ['train', 'val', 'gen_dets'])
+op270=>operation: net = build_retinanet(args).cuda()
+cond273=>condition: if args.MULTI_GPUS
+sub277=>subroutine: logger.info('\nLets do dataparallel\n')
+op279=>operation: net = torch.nn.DataParallel(net)
+cond288=>operation: logger.info(((str(arg) + ': ') + str(getattr(args, arg)))) while  arg in sorted(vars(args))
+cond301=>condition: if (args.MODE == 'train')
+cond306=>condition: if args.FBN
+cond311=>condition: if args.MULTI_GPUS
+sub315=>subroutine: net.module.backbone.apply(utils.set_bn_eval)
+sub325=>subroutine: train(args, net, train_dataset, val_dataset)
+e375=>end: end main
+sub319=>subroutine: net.backbone.apply(utils.set_bn_eval)
+cond330=>condition: if (args.MODE == 'val')
+sub334=>subroutine: val(args, net, val_dataset)
+cond339=>condition: if (args.MODE == 'gen_dets')
+sub343=>subroutine: gen_dets(args, net, val_dataset)
+sub345=>subroutine: eval_framewise_dets(args, val_dataset)
+sub347=>subroutine: build_eval_tubes(args, val_dataset)
+cond352=>condition: if (args.MODE == 'eval_frames')
+sub356=>subroutine: eval_framewise_dets(args, val_dataset)
+cond361=>operation: build_eval_tubes(args, val_dataset) if  (args.MODE == 'eval_tubes')
+op190=>operation: train_skip_step = args.SEQ_LEN
+op205=>operation: args.SEQ_LEN = args.TEST_SEQ_LEN
+op207=>operation: args.MAX_SEQ_STEP = 1
+op209=>operation: args.SUBSETS = args.TEST_SUBSETS
+op211=>operation: full_test = True
+op213=>operation: args.skip_beggning = 0
+op215=>operation: args.skip_ending = 0
+cond218=>condition: if ((args.MODEL_TYPE == 'I3D') or 'SlowFast')
+op222=>operation: args.skip_beggning = 2
+op224=>operation: args.skip_ending = 2
+op240=>operation: skip_step = (args.SEQ_LEN - args.skip_beggning)
+cond229=>operation: args.skip_beggning = 2 if  (args.MODEL_TYPE != 'C2D')
+op169=>operation: args.SEQ_LEN = args.TEST_SEQ_LEN
+
+st3->io5
+io5->op8
+op8->sub10
+sub10->sub12
+sub12->sub14
+sub14->sub16
+sub16->sub18
+sub18->sub20
+sub20->sub22
+sub22->sub24
+sub24->sub26
+sub26->sub28
+sub28->sub30
+sub30->sub32
+sub32->sub34
+sub34->sub36
+sub36->sub38
+sub38->sub40
+sub40->sub42
+sub42->sub44
+sub44->sub46
+sub46->sub48
+sub48->sub50
+sub50->sub52
+sub52->sub54
+sub54->sub56
+sub56->sub58
+sub58->sub60
+sub60->sub62
+sub62->sub64
+sub64->sub66
+sub66->sub68
+sub68->sub70
+sub70->sub72
+sub72->sub74
+sub74->sub76
+sub76->sub78
+sub78->sub80
+sub80->sub82
+sub82->sub84
+sub84->sub86
+sub86->sub88
+sub88->sub90
+sub90->sub92
+sub92->sub94
+sub94->sub96
+sub96->sub98
+sub98->sub100
+sub100->sub102
+sub102->sub104
+sub104->sub106
+sub106->sub108
+sub108->sub110
+sub110->sub112
+sub112->sub114
+sub114->sub116
+sub116->sub118
+sub118->sub120
+sub120->sub122
+sub122->sub124
+sub124->sub126
+sub126->sub128
+sub128->sub130
+sub130->sub132
+sub132->sub134
+sub134->sub136
+sub136->op138
+op138->op140
+op140->op142
+op142->sub144
+sub144->sub146
+sub146->sub148
+sub148->op150
+op150->sub152
+sub152->op154
+op154->sub156
+sub156->op158
+op158->cond161
+cond161(yes)->op165
+op165->cond173
+cond173(yes)->op177
+op177->op179
+op179->cond182
+cond182(yes)->op186
+op186->op193
+op193->sub195
+sub195->op197
+op197->op199
+op199->op201
+op201->op243
+op243->op245
+op245->sub247
+sub247->op249
+op249->op251
+op251->op253
+op253->op255
+op255->op257
+op257->op259
+op259->op261
+op261->op263
+op263->cond266
+cond266(yes)->op270
+op270->cond273
+cond273(yes)->sub277
+sub277->op279
+op279->cond288
+cond288->cond301
+cond301(yes)->cond306
+cond306(yes)->cond311
+cond311(yes)->sub315
+sub315->sub325
+sub325->e375
+cond311(no)->sub319
+sub319->sub325
+cond306(no)->sub325
+cond301(no)->cond330
+cond330(yes)->sub334
+sub334->e375
+cond330(no)->cond339
+cond339(yes)->sub343
+sub343->sub345
+sub345->sub347
+sub347->e375
+cond339(no)->cond352
+cond352(yes)->sub356
+sub356->e375
+cond352(no)->cond361
+cond361->e375
+cond273(no)->cond288
+cond266(no)->cond288
+cond182(no)->op190
+op190->op193
+cond173(no)->op205
+op205->op207
+op207->op209
+op209->op211
+op211->op213
+op213->op215
+op215->cond218
+cond218(yes)->op222
+op222->op224
+op224->op240
+op240->op243
+cond218(no)->cond229
+cond229->op240
+cond161(no)->op169
+op169->cond173
+</textarea></div>
+        <div><button id="run" type="button">Run</button> <button onclick="HelpText()">Format Help</button></div>
+        <div id="HelpTextBlock" style="display:none"><br/>Conditions can also be redirected like cond(yes, bottom) or cond(yes, right)
+... and the other symbols too... like sub1(right)<br/>
+You can also tweak the <b>diagram.drawSVG('diagram', {});</b> script in this file for more changes<br/>
+This is based on <a href="https://github.com/adrai/flowchart.js">flowchart.js on github</a> and <a href="http://flowchart.js.org">http://flowchart.js.org</a> more documentation can be found over there.
+</div><br/><div id="svgbase64"></div>
+        <div id="pngbase64"></div>
+
+        <div id="canvas"></div>
+    </body>
+</html>
