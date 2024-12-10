@@ -116,6 +116,12 @@ Run the following command for reducing size of the video (I figured it out. The 
 ffmpeg -i output.mp4 -b 1000000 output_compress.mp4
 ```
 
+To generate the code flow diagram, use pyflowchart
+```
+pip3 install pyflowchart
+python3 -m pyflowchart main.py -o main.html -f main
+```
+
 
 ## Performance
 
